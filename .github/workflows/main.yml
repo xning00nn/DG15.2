@@ -1,0 +1,43 @@
+name: Build Unsigned iOS IPA
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-ipa:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Build DJPhone.app (Unsigned)
+        run: |
+          xcodebuild \
+            -project DJPhone.xcodeproj \
+            -scheme DJPhone \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/Build/Products/Release-iphoneos/DJPhone.app Payload/
+          zip -qry DJPhone.ipa Payload
+
+      - name: Upload DJPhone.ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: DJPhone-ipa
+          path: DJPhone.ipa
