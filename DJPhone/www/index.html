@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DG电话 v15.2</title>
+    <style>
+        :root {
+            --primary: #007AFF;
+            --success: #34C759;
+            --danger: #FF3B30;
+            --warning: #FF9500;
+            --bg-main: #F2F2F7;
+            --bg-card: #FFFFFF;
+            --bg-subtle: #E5E5EA;
+            --text-primary: #1C1C1E;
+            --text-secondary: #8E8E93;
+            --border-color: #D1D1D6;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 16px);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #0A84FF;
+                --success: #30D158;
+                --danger: #FF453A;
+                --warning: #FF9F0A;
+                --bg-main: #000000;
+                --bg-card: #1C1C1E;
+                --bg-subtle: #2C2C2E;
+                --text-primary: #F2F2F7;
+                --text-secondary: #98989D;
+                --border-color: #38383A;
+            }
+        }
+        body.dark-forced {
+            --primary: #0A84FF;
+            --success: #30D158;
+            --danger: #FF453A;
+            --warning: #FF9F0A;
+            --bg-main: #000000;
+            --bg-card: #1C1C1E;
+            --bg-subtle: #2C2C2E;
+            --text-primary: #F2F2F7;
+            --text-secondary: #98989D;
+            --border-color: #38383A;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+        .selectable {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+        header {
+            padding: calc(var(--safe-top) + 8px) 16px 10px;
+            background: var(--bg-card);
+            border-bottom: 0.5px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .header-left { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; }
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 11px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 59, 48, 0.14);
+            color: var(--danger);
+            cursor: pointer;
+        }
+        .status-pill.ok {
+            background: rgba(52, 199, 89, 0.16);
+            color: var(--success);
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+        .icon-btn {
+            min-width: 38px;
+            min-height: 38px;
+            border-radius: 10px;
+            border: none;
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        /* Global AT Offline Warning Banner */
+        .offline-banner {
+            background: rgba(255, 149, 0, 0.16);
+            color: var(--warning);
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 0.5px solid var(--border-color);
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .offline-banner.hidden { display: none; }
+
+        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .tab-panel { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding: 14px 16px; }
+        .tab-panel.active { display: flex; }
+
+        /* TAB 1: DIALER */
+        .phone-display {
+            text-align: center;
+            padding: 8px 12px 10px;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .phone-number-input { font-size: 34px; font-weight: 600; letter-spacing: 1px; min-height: 40px; word-break: break-all; }
+        .phone-sub-hint { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 310px; margin: 0 auto; width: 100%; }
+        .key-btn {
+            background: var(--bg-card);
+            border-radius: 50%;
+            width: 72px;
+            height: 72px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 0.5px solid var(--border-color);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .key-btn:active { background: var(--bg-subtle); transform: scale(0.95); }
+        .key-num { font-size: 27px; font-weight: 500; line-height: 1; }
+        .key-letters { font-size: 9px; font-weight: 600; letter-spacing: 1px; color: var(--text-secondary); margin-top: 3px; }
+        .call-actions-row { display: flex; justify-content: center; align-items: center; gap: 28px; margin-top: 14px; }
+        .btn-call {
+            background: var(--success);
+            color: #fff;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(52, 199, 89, 0.35);
+            cursor: pointer;
+        }
+        .btn-call:disabled, .btn-primary-pill:disabled {
+            opacity: 0.45;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        .btn-backspace {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .recents-card {
+            margin-top: 14px;
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 12px 14px;
+            border: 0.5px solid var(--border-color);
+        }
+        .recents-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+        .recent-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 0.5px solid var(--border-color); font-size: 14px; cursor: pointer; }
+        .recent-row:last-child { border-bottom: none; }
+
+        /* TAB 2: MESSAGES */
+        #tab-messages { padding: 0; overflow: hidden; }
+        .sms-view-wrapper { display: flex; flex-direction: column; height: 100%; width: 100%; }
+        .sms-toolbar {
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-bottom: 0.5px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .sms-threads-list { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .thread-item { background: var(--bg-card); border-radius: 14px; padding: 14px; border: 0.5px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .thread-main { flex: 1; overflow: hidden; }
+        .thread-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .thread-Peer { font-weight: 700; font-size: 15px; }
+        .thread-time { font-size: 12px; color: var(--text-secondary); }
+        .thread-preview { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .unread-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .chat-detail-view { display: none; flex-direction: column; height: 100%; width: 100%; }
+        .chat-detail-view.active { display: flex; }
+        .chat-messages-scroll { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .bubble-wrapper { display: flex; flex-direction: column; max-width: 82%; }
+        .bubble-wrapper.in { align-self: flex-start; }
+        .bubble-wrapper.out { align-self: flex-end; align-items: flex-end; }
+        .bubble { padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.45; word-break: break-word; }
+        .bubble-wrapper.in .bubble { background: var(--bg-card); color: var(--text-primary); border: 0.5px solid var(--border-color); }
+        .bubble-wrapper.out .bubble { background: var(--primary); color: #FFFFFF; }
+        .bubble-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 3px; padding: 0 4px; }
+        .bubble-meta { font-size: 11px; color: var(--text-secondary); }
+        .bubble-meta.err { color: var(--danger); font-weight: 600; }
+        .retry-btn {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(0, 122, 255, 0.14);
+            border: none;
+            border-radius: 8px;
+            padding: 2px 8px;
+            cursor: pointer;
+        }
+        .otp-chip {
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 122, 255, 0.14);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .chat-compose-bar {
+            flex-shrink: 0;
+            background: var(--bg-card);
+            border-top: 0.5px solid var(--border-color);
+            padding: 10px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .chat-input {
+            flex: 1;
+            min-height: 40px;
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 0.5px solid var(--border-color);
+            background: var(--bg-main);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+        }
+        .btn-primary-pill {
+            min-height: 40px;
+            padding: 0 16px;
+            border-radius: 20px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-backdrop.active { display: flex; }
+        .modal-card {
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 380px;
+            border-radius: 18px;
+            padding: 18px;
+            border: 0.5px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* TAB 3: UNIFIED STATUS CARD & ADVANCED */
+        .unified-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 16px;
+            border: 0.5px solid var(--border-color);
+            margin-bottom: 14px;
+        }
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 0.5px solid var(--border-color);
+            margin-bottom: 10px;
+        }
+        .signal-bars { display: inline-flex; align-items: flex-end; gap: 3px; height: 18px; }
+        .s-bar { width: 4px; background: var(--bg-subtle); border-radius: 2px; }
+        .s-bar.on { background: var(--success); }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 0.5px solid var(--border-color);
+            font-size: 14px;
+        }
+        .status-row:last-child { border-bottom: none; }
+        .badge-tag { padding: 3px 9px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+        .badge-green { background: rgba(52, 199, 89, 0.16); color: var(--success); }
+        .badge-red { background: rgba(255, 59, 48, 0.16); color: var(--danger); }
+
+        details.adv-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 0.5px solid var(--border-color);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+        details.adv-panel summary {
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .terminal-box {
+            background: #111113;
+            color: #30D158;
+            font-family: Menlo, monospace;
+            font-size: 12px;
+            border-radius: 10px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .quick-cmds { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+        .quick-chip {
+            background: var(--bg-subtle);
+            padding: 6px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            color: var(--primary);
+            cursor: pointer;
+            border: none;
+        }
+
+        /* IN-CALL OVERLAY */
+        .incall-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(180deg, #1C1C1E 0%, #000000 100%);
+            color: #fff;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: calc(var(--safe-top) + 32px) 24px calc(var(--safe-bottom) + 32px);
+            text-align: center;
+        }
+        .incall-overlay.active { display: flex; }
+        .incall-peer { font-size: 32px; font-weight: 700; margin-bottom: 6px; }
+        .incall-badge { font-size: 15px; color: #98989D; }
+        .incall-audio-detail {
+            margin-top: 8px;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.08);
+            padding: 8px 14px;
+            border-radius: 12px;
+            color: #D1D1D6;
+        }
+        .incall-timer { font-size: 22px; font-weight: 600; margin-top: 10px; font-variant-numeric: tabular-nums; }
+        .incall-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 300px; margin: 0 auto; }
+        .incall-btn {
+            background: rgba(255,255,255,0.16);
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            border: none;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .incall-btn.active { background: #fff; color: #000; }
+        .dtmf-drawer { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 260px; margin: 10px auto; }
+        .dtmf-drawer.active { display: grid; }
+        .dtmf-key { background: rgba(255,255,255,0.18); border: none; color: #fff; height: 48px; border-radius: 24px; font-size: 20px; font-weight: 600; cursor: pointer; }
+        .call-bottom-bar { display: flex; justify-content: center; gap: 48px; align-items: center; }
+        .btn-circle-action { width: 72px; height: 72px; border-radius: 50%; border: none; color: #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+
+        nav {
+            flex-shrink: 0;
+            padding-bottom: var(--safe-bottom);
+            height: calc(var(--safe-bottom) + 56px);
+            background: var(--bg-card);
+            border-top: 0.5px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .tab-btn {
+            flex: 1;
+            height: 56px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+        }
+        .tab-btn.active { color: var(--primary); }
+        .nav-badge {
+            position: absolute;
+            top: 4px;
+            left: calc(50% + 6px);
+            background: var(--danger);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-badge.show { display: inline-flex; }
+        .toast {
+            position: fixed;
+            top: calc(var(--safe-top) + 56px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(28,28,30,0.92);
+            color: #fff;
+            padding: 9px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 3000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span>DG电话 v15.2</span>
+        </div>
+        <div class="header-right">
+            <div class="status-pill" id="topStatusPill" onclick="postNative('refreshStatus', {})">
+                <span class="status-dot"></span>
+                <span id="topStatusText">未连接模块</span>
+            </div>
+            <button class="icon-btn" onclick="toggleDarkMode()" title="切换深浅色">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Global AT Disconnected Warning Banner -->
+    <div class="offline-banner" id="offlineBanner" onclick="switchTab('network', 2)">
+        <span id="offlineBannerText">⚠️ AT 指令通道未连接，拨号与发短信已禁用</span>
+        <span>前往设置 ▸</span>
+    </div>
+
+    <main>
+        <!-- TAB 1: DIALER -->
+        <div class="tab-panel active" id="tab-phone">
+            <div class="phone-display">
+                <div class="phone-number-input selectable" id="phoneInput"></div>
+                <div class="phone-sub-hint">长按 0 键可输入 + 号</div>
+            </div>
+
+            <div class="keypad-grid">
+                <button class="key-btn" onclick="pressKey('1')"><span class="key-num">1</span><span class="key-letters">&nbsp;</span></button>
+                <button class="key-btn" onclick="pressKey('2')"><span class="key-num">2</span><span class="key-letters">ABC</span></button>
+                <button class="key-btn" onclick="pressKey('3')"><span class="key-num">3</span><span class="key-letters">DEF</span></button>
+                <button class="key-btn" onclick="pressKey('4')"><span class="key-num">4</span><span class="key-letters">GHI</span></button>
+                <button class="key-btn" onclick="pressKey('5')"><span class="key-num">5</span><span class="key-letters">JKL</span></button>
+                <button class="key-btn" onclick="pressKey('6')"><span class="key-num">6</span><span class="key-letters">MNO</span></button>
+                <button class="key-btn" onclick="pressKey('7')"><span class="key-num">7</span><span class="key-letters">PQRS</span></button>
+                <button class="key-btn" onclick="pressKey('8')"><span class="key-num">8</span><span class="key-letters">TUV</span></button>
+                <button class="key-btn" onclick="pressKey('9')"><span class="key-num">9</span><span class="key-letters">WXYZ</span></button>
+                <button class="key-btn" onclick="pressKey('*')"><span class="key-num">*</span><span class="key-letters">&nbsp;</span></button>
+                <button class="key-btn" id="keyZeroBtn"><span class="key-num">0</span><span class="key-letters">+</span></button>
+                <button class="key-btn" onclick="pressKey('#')"><span class="key-num">#</span><span class="key-letters">&nbsp;</span></button>
+            </div>
+
+            <div class="call-actions-row">
+                <div style="width:72px;"></div>
+                <button class="btn-call" id="mainDialBtn" onclick="startOutgoingCall()">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
+                        <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                    </svg>
+                </button>
+                <button class="btn-backspace" onclick="deleteDigit()">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                        <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="recents-card">
+                <div class="recents-header">
+                    <span>最近通话记录</span>
+                    <span style="color:var(--primary); cursor:pointer;" onclick="clearRecents()">清空</span>
+                </div>
+                <div id="recentsContainer"></div>
+            </div>
+        </div>
+
+        <!-- TAB 2: MESSAGES -->
+        <div class="tab-panel" id="tab-messages">
+            <div class="sms-view-wrapper" id="smsThreadsView">
+                <div class="sms-toolbar">
+                    <span style="font-size:17px; font-weight:700;">短信会话</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="icon-btn" onclick="postNative('pollSMS', {}); showToast('正在同步模块短信...');" title="同步模块短信">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                        </button>
+                        <button class="icon-btn" onclick="confirmExportSms()" title="导出备份全部短信">导出</button>
+                        <button class="btn-primary-pill" id="btnNewSmsTop" onclick="openNewSmsModal()">+ 新建短信</button>
+                    </div>
+                </div>
+                <div class="sms-threads-list" id="threadsContainer"></div>
+            </div>
+
+            <div class="chat-detail-view" id="smsChatDetailView">
+                <div class="sms-toolbar">
+                    <button class="icon-btn" onclick="closeChatThread()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </button>
+                    <span style="font-size:16px; font-weight:700;" id="activeChatPeerTitle">会话</span>
+                    <button class="icon-btn" onclick="dialFromChat()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="chat-messages-scroll selectable" id="chatBubblesContainer"></div>
+                <div class="chat-compose-bar">
+                    <input type="text" class="chat-input" id="chatReplyInput" maxlength="70" placeholder="输入短信 (限70 UTF-16单元)..." />
+                    <button class="btn-primary-pill" id="btnChatSend" onclick="sendReplyInThread()">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: UNIFIED STATUS CARD & ADVANCED -->
+        <div class="tab-panel" id="tab-network">
+            <div class="unified-card">
+                <div class="signal-header">
+                    <div>
+                        <div style="font-size:17px; font-weight:700;" id="cardOperatorName">未检测到运营商</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;" id="cardRegText">等待模块汇报注册状态...</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="signal-bars" id="signalBarsBox">
+                            <span class="s-bar" style="height:5px;"></span>
+                            <span class="s-bar" style="height:8px;"></span>
+                            <span class="s-bar" style="height:11px;"></span>
+                            <span class="s-bar" style="height:14px;"></span>
+                            <span class="s-bar" style="height:18px;"></span>
+                        </div>
+                        <span style="font-size:12px; font-weight:600;" id="cardCSQText">CSQ --</span>
+                    </div>
+                </div>
+
+                <div class="status-row">
+                    <span>USB 网卡 (CDC-ECM)</span>
+                    <span class="badge-tag badge-red" id="badgeECM">未连接</span>
+                </div>
+                <div class="status-row">
+                    <span>AT 指令通道状态</span>
+                    <span class="badge-tag badge-red" id="badgeATBridge">未连接</span>
+                </div>
+                <div class="status-row">
+                    <span>USB 声卡硬件 (UAC)</span>
+                    <span class="badge-tag badge-red" id="badgeUAC">未挂载</span>
+                </div>
+                <div class="status-row">
+                    <span>SIM 卡 PIN 状态</span>
+                    <span style="font-weight:600;" id="cardSimPin">检测中</span>
+                </div>
+                <div class="status-row">
+                    <span>短信中心号码 (SMSC)</span>
+                    <span style="font-family:monospace; font-size:13px;" class="selectable" id="cardSMSC">自动读取</span>
+                </div>
+                <div class="status-row">
+                    <span>屏幕常亮防断连 (前台保活)</span>
+                    <button class="btn-primary-pill" style="min-height:30px; font-size:12px; background:var(--success);" id="btnKeepAwake" onclick="toggleKeepAwake()">常亮已开启</button>
+                </div>
+                <div class="status-row">
+                    <span>通知横幅显示短信正文</span>
+                    <button class="btn-primary-pill" style="min-height:30px; font-size:12px; background:var(--bg-subtle); color:var(--text-primary);" id="btnNotifPreview" onclick="toggleNotifPreview()">默认隐藏防窥</button>
+                </div>
+                <div class="status-row">
+                    <div>
+                        <div>VoLTE 开关 (IMS)</div>
+                        <div style="font-size:11px; color:var(--text-secondary);" id="imsRegSubText">IMS 状态: 未知</div>
+                    </div>
+                    <button class="btn-primary-pill" style="min-height:32px; font-size:12px;" id="btnVolteToggle" onclick="toggleVoLTE()">开启 VoLTE</button>
+                </div>
+            </div>
+
+            <!-- Collapsible Advanced Panel -->
+            <details class="adv-panel">
+                <summary>
+                    <span>高级：AT 桥接设置、MBN/APN 与终端</span>
+                    <span style="font-size:12px; color:var(--text-secondary);">点击展开 ▾</span>
+                </summary>
+                <div style="margin-top:12px;">
+                    <div class="status-row">
+                        <span>AT 桥接地址:端口</span>
+                        <div style="display:flex; gap:6px;">
+                            <input type="text" id="endpointHostInput" value="192.168.225.1" style="width:115px; padding:4px 8px; border-radius:8px; border:0.5px solid var(--border-color); background:var(--bg-main); color:var(--text-primary); font-size:12px;" />
+                            <input type="number" id="endpointPortInput" value="5555" style="width:62px; padding:4px 6px; border-radius:8px; border:0.5px solid var(--border-color); background:var(--bg-main); color:var(--text-primary); font-size:12px;" />
+                            <button class="btn-primary-pill" style="min-height:30px; padding:0 10px; font-size:12px;" onclick="saveEndpoint()">重连</button>
+                        </div>
+                    </div>
+
+                    <div class="status-row">
+                        <span>探测模块开放的网络端口 (排查 AT 通道)</span>
+                        <button class="btn-primary-pill" style="min-height:30px; padding:0 10px; font-size:12px;" onclick="postNative('probePorts', {}); showToast('正在探测…结果显示在下方终端');">探测端口</button>
+                    </div>
+
+                    <div class="status-row">
+                        <span>USB 注册表探测 (实验：验证 iOS 是否向本 App 开放该模块)</span>
+                        <button class="btn-primary-pill" style="min-height:30px; padding:0 10px; font-size:12px;" onclick="postNative('probeUSB', {}); showToast('正在探测 USB…结果显示在下方终端');">探测 USB</button>
+                    </div>
+
+                    <div class="status-row">
+                        <span>运营商 MBN 配置文件自动匹配</span>
+                        <button class="btn-primary-pill" style="min-height:30px; padding:0 10px; font-size:12px;" onclick="postNative('triggerMBN', {}); showToast('已发送 MBN AutoSel 指令');">重新触发 AutoSel</button>
+                    </div>
+
+                    <div class="status-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
+                        <div style="font-size:12px; color:var(--warning);">⚠️ 手动修改 APN 仅用于无法自动上网时，随意更改可能影响默认数据连接与 VoLTE</div>
+                        <div style="display:flex; width:100%; justify-content:space-between; align-items:center;">
+                            <span>手动写入 APN (CGDCONT)</span>
+                            <div style="display:flex; gap:6px;">
+                                <input type="text" id="apnInput" placeholder="如 ctnet" style="width:90px; padding:4px 8px; border-radius:8px; border:0.5px solid var(--border-color); background:var(--bg-main); color:var(--text-primary); font-size:12px;" />
+                                <button class="btn-primary-pill" style="min-height:30px; padding:0 10px; font-size:12px; background:var(--warning);" onclick="applyAPNConfirm()">写入</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-cmds" style="margin-top:10px;">
+                        <button class="quick-chip" onclick="sendATCmd('AT+CPIN?')">CPIN?</button>
+                        <button class="quick-chip" onclick="sendATCmd('AT+CEREG?')">CEREG?</button>
+                        <button class="quick-chip" onclick="sendATCmd('AT+COPS?')">COPS?</button>
+                        <button class="quick-chip" onclick="sendATCmd('AT+QCFG=\"ims\"')">查VoLTE</button>
+                        <button class="quick-chip" onclick="sendATCmd('AT+QPCMV?')">查QPCMV</button>
+                        <button class="quick-chip" onclick="sendATCmd('AT+CLCC')">查CLCC</button>
+                        <button class="quick-chip" style="background:rgba(56,189,248,0.18);color:#0284c7;font-weight:600;" onclick="postNative('runAudioDiag', {})">🔊 音频自检</button>
+                        <button class="quick-chip" style="background:rgba(34,197,94,0.18);color:#16a34a;font-weight:600;" onclick="postNative('exportSerialLog', {})">📥 导出串口日志</button>
+                    </div>
+                    <div class="terminal-box selectable" id="termOutput">[DJPhone v15.2] 串行同步命令引擎已启用。\n</div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" class="chat-input" id="atInput" placeholder="输入 AT 指令 (按 ↑/↓ 切换历史)..." onkeydown="handleATKeydown(event)" />
+                        <button class="btn-primary-pill" onclick="sendCustomAT()">发送</button>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </main>
+
+    <!-- New SMS Modal -->
+    <div class="modal-backdrop" id="newSmsModal">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:17px; font-weight:700;">新建短信 (UCS2)</span>
+                <span style="font-size:12px; color:var(--text-secondary);" id="modalCharCount">0 / 70 单元</span>
+            </div>
+            <input type="tel" class="chat-input" id="modalRecipient" placeholder="收件人号码 (仅限数字与+号)" />
+            <textarea class="chat-input" id="modalBody" rows="4" oninput="updateCharCounter()" style="border-radius:14px; resize:none;" placeholder="输入短信正文 (最多 70 个 UTF-16 单元，含表情占2单元)..."></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="icon-btn" style="padding:0 16px;" onclick="closeNewSmsModal()">取消</button>
+                <button class="btn-primary-pill" id="btnModalSendSms" onclick="confirmSendModalSms()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- In-Call & Incoming Call Fullscreen Overlay -->
+    <div class="incall-overlay" id="incallOverlay">
+        <div>
+            <div class="incall-peer" id="incallPeer">未知号码</div>
+            <div class="incall-badge" id="incallBadge">正在呼叫...</div>
+            <div class="incall-audio-detail">
+                <span id="incallHwLine">USB UAC 硬件: 检测中</span>
+                <span id="incallStreamLine">语音通道状态: 等待接通</span>
+            </div>
+            <div class="incall-timer" id="incallTimer" style="display:none;">00:00</div>
+        </div>
+
+        <div>
+            <div class="dtmf-drawer" id="dtmfDrawer">
+                <button class="dtmf-key" onclick="sendDTMF('1')">1</button>
+                <button class="dtmf-key" onclick="sendDTMF('2')">2</button>
+                <button class="dtmf-key" onclick="sendDTMF('3')">3</button>
+                <button class="dtmf-key" onclick="sendDTMF('4')">4</button>
+                <button class="dtmf-key" onclick="sendDTMF('5')">5</button>
+                <button class="dtmf-key" onclick="sendDTMF('6')">6</button>
+                <button class="dtmf-key" onclick="sendDTMF('7')">7</button>
+                <button class="dtmf-key" onclick="sendDTMF('8')">8</button>
+                <button class="dtmf-key" onclick="sendDTMF('9')">9</button>
+                <button class="dtmf-key" onclick="sendDTMF('*')">*</button>
+                <button class="dtmf-key" onclick="sendDTMF('0')">0</button>
+                <button class="dtmf-key" onclick="sendDTMF('#')">#</button>
+            </div>
+
+            <div class="incall-controls">
+                <button class="incall-btn" id="btnMute" onclick="toggleMute()"><span>静音</span></button>
+                <button class="incall-btn" id="btnKeypadToggle" onclick="toggleDTMFDrawer()"><span>拨号键盘</span></button>
+                <button class="incall-btn active" id="btnSpeaker" onclick="toggleSpeaker()"><span>免提</span></button>
+            </div>
+        </div>
+
+        <div class="call-bottom-bar">
+            <button class="btn-circle-action" id="btnAnswerCall" style="background:var(--success); display:none;" onclick="answerIncoming()">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
+                    <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                </svg>
+            </button>
+            <button class="btn-circle-action" style="background:var(--danger);" onclick="hangupCall()">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.996.996 0 010-1.41C3.42 8.47 7.46 6.5 12 6.5s8.58 1.97 11.71 5.17c.39.39.39 1.02 0 1.41l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <nav>
+        <button class="tab-btn active" onclick="switchTab('phone', 0)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span>拨号</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('messages', 1)">
+            <span class="nav-badge" id="smsUnreadBadge">0</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>短信</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('network', 2)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+            </svg>
+            <span>模块与网络</span>
+        </button>
+    </nav>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let dialNumber = '';
+        let callTimer = null;
+        let callSeconds = 0;
+        let isMuted = false;
+        let isSpeaker = true;
+        let volteState = false;
+        let isATBridgeOnline = false;
+        let isCallBusy = false;
+        let activeChatPeer = null;
+        let currentTabId = 'phone';
+        let cmdHistory = [];
+        let cmdHistoryIdx = -1;
+
+        function safeLoadStorage(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return fallback;
+                const parsed = JSON.parse(raw);
+                return parsed || fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        let recentsData = safeLoadStorage('djphone_recents_v5', []);
+        let smsThreads = safeLoadStorage('djphone_threads_v5', {});
+        let seenDedupKeys = new Set(safeLoadStorage('djphone_sms_dedup_v5', []));
+
+        function saveState() {
+            try {
+                localStorage.setItem('djphone_recents_v5', JSON.stringify(recentsData.slice(0, 50)));
+                localStorage.setItem('djphone_threads_v5', JSON.stringify(smsThreads));
+                localStorage.setItem('djphone_sms_dedup_v5', JSON.stringify(Array.from(seenDedupKeys).slice(-400)));
+            } catch (e) {}
+            updateUnreadBadge();
+        }
+
+        function postNative(action, payload) {
+            const msg = Object.assign({ action: action }, payload || {});
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.djphone) {
+                window.webkit.messageHandlers.djphone.postMessage(msg);
+            } else {
+                appendATLog('[本地预览] ' + JSON.stringify(msg));
+            }
+        }
+
+        function copyTextSafe(text) {
+            postNative('copyText', { text: text });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {});
+            }
+            showToast('已复制: ' + text);
+        }
+
+        (function setupZeroLongPress() {
+            const btn = document.getElementById('keyZeroBtn');
+            let pressTimer = null;
+            let longPressed = false;
+            btn.addEventListener('touchstart', () => {
+                longPressed = false;
+                pressTimer = setTimeout(() => {
+                    longPressed = true;
+                    pressKey('+');
+                }, 500);
+            }, { passive: true });
+            btn.addEventListener('touchend', () => {
+                clearTimeout(pressTimer);
+                if (!longPressed) pressKey('0');
+            });
+            btn.addEventListener('click', () => {
+                if (!('ontouchstart' in window)) pressKey('0');
+            });
+        })();
+
+        function toggleDarkMode() { document.body.classList.toggle('dark-forced'); }
+
+        function switchTab(id, idx) {
+            currentTabId = id;
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+            if (id === 'messages' && activeChatPeer) {
+                markThreadRead(activeChatPeer);
+            }
+        }
+
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2400);
+        }
+
+        function updateInteractiveButtonsState() {
+            const disableOps = !isATBridgeOnline;
+            // Mutual exclusion: disable dial during SMS send; disable SMS send during call
+            document.getElementById('mainDialBtn').disabled = disableOps || isCallBusy || (typeof isSendingSMSBusy !== 'undefined' && isSendingSMSBusy);
+            document.getElementById('btnChatSend').disabled = disableOps || isCallBusy || (typeof isSendingSMSBusy !== 'undefined' && isSendingSMSBusy);
+            document.getElementById('btnModalSendSms').disabled = disableOps || isCallBusy || (typeof isSendingSMSBusy !== 'undefined' && isSendingSMSBusy);
+            const banner = document.getElementById('offlineBanner');
+            banner.classList.toggle('hidden', isATBridgeOnline);
+        }
+
+        // Dialer
+        function pressKey(k) {
+            dialNumber += k;
+            document.getElementById('phoneInput').textContent = dialNumber;
+        }
+        function deleteDigit() {
+            dialNumber = dialNumber.slice(0, -1);
+            document.getElementById('phoneInput').textContent = dialNumber;
+        }
+        function recordRecentCall(num, type) {
+            const now = new Date();
+            const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+            recentsData.unshift({ number: num, type: type, time: timeStr });
+            saveState();
+            renderRecents();
+        }
+        function clearRecents() {
+            recentsData = [];
+            saveState();
+            renderRecents();
+        }
+        function renderRecents() {
+            const box = document.getElementById('recentsContainer');
+            box.textContent = '';
+            if (!Array.isArray(recentsData) || recentsData.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'font-size:13px; color:var(--text-secondary); padding:8px 0;';
+                empty.textContent = '暂无通话记录';
+                box.appendChild(empty);
+                return;
+            }
+            recentsData.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'recent-row';
+                row.onclick = () => {
+                    dialNumber = item.number;
+                    document.getElementById('phoneInput').textContent = dialNumber;
+                };
+                const left = document.createElement('span');
+                left.style.fontWeight = '600';
+                left.textContent = item.number + ' (' + item.type + ')';
+                const right = document.createElement('span');
+                right.style.color = 'var(--text-secondary)';
+                right.textContent = item.time;
+                row.appendChild(left);
+                row.appendChild(right);
+                box.appendChild(row);
+            });
+        }
+
+        // Call Overlay with Separate Hardware vs Audio Stream Indicators (Bug 6 & Bug 8 Fixed)
+        function startOutgoingCall() {
+            if (!isATBridgeOnline) { showToast('AT 通道未连接，无法拨号'); return; }
+            if (isCallBusy) { showToast('当前已有通话进行中'); return; }
+            const clean = dialNumber.replace(/[^0-9+*#]/g, '');
+            if (!clean) { showToast('请输入有效号码'); return; }
+            recordRecentCall(clean, '呼出');
+            postNative('dial', { number: clean });
+        }
+        function answerIncoming() { postNative('answer', {}); }
+        function hangupCall() { postNative('hangup', {}); hideCallOverlay(); }
+        function sendDTMF(d) { postNative('dtmf', { digit: d }); showToast('按键 ' + d); }
+        function toggleDTMFDrawer() {
+            document.getElementById('dtmfDrawer').classList.toggle('active');
+            document.getElementById('btnKeypadToggle').classList.toggle('active');
+        }
+        function toggleMute() { postNative('mute', { value: !isMuted }); }
+        function toggleSpeaker() { postNative('speaker', { value: !isSpeaker }); }
+
+        function showCallOverlay(peer, state, uacMounted, audioActive, qpcmvOn) {
+            isCallBusy = true;
+            updateInteractiveButtonsState();
+
+            const ov = document.getElementById('incallOverlay');
+            ov.classList.add('active');
+            document.getElementById('incallPeer').textContent = peer || '未知号码';
+            const badge = document.getElementById('incallBadge');
+            const hwLine = document.getElementById('incallHwLine');
+            const streamLine = document.getElementById('incallStreamLine');
+            const timerEl = document.getElementById('incallTimer');
+            const answerBtn = document.getElementById('btnAnswerCall');
+
+            hwLine.textContent = 'USB UAC 声卡硬件: ' + (uacMounted ? '已挂载 (.usbAudio)' : '未挂载');
+            streamLine.textContent = '语音链路: QPCMV=' + (qpcmvOn ? '已开启' : '未开启') + ' · CallKit音频=' + (audioActive ? '已激活' : '未激活');
+
+            if (state === 'incoming') {
+                badge.textContent = (typeof isSendingSMSBusy !== 'undefined' && isSendingSMSBusy)
+                    ? '来电振铃中 (短信回执等待中，接听最多等 12 秒)...'
+                    : '来电振铃中...';
+                timerEl.style.display = 'none';
+                answerBtn.style.display = 'flex';
+            } else if (state === 'connecting') {
+                badge.textContent = '正在接听连接中 (等待模块 CLCC 确认)...';
+                timerEl.style.display = 'none';
+                answerBtn.style.display = 'none';
+            } else if (state === 'dialing') {
+                badge.textContent = '正在呼叫...';
+                timerEl.style.display = 'none';
+                answerBtn.style.display = 'none';
+            } else if (state === 'alerting') {
+                badge.textContent = '对方振铃中...';
+                timerEl.style.display = 'none';
+                answerBtn.style.display = 'none';
+            } else if (state === 'connected') {
+                badge.textContent = '通话已接通';
+                answerBtn.style.display = 'none';
+                timerEl.style.display = 'block';
+                if (!callTimer) {
+                    callSeconds = 0;
+                    timerEl.textContent = '00:00';
+                    callTimer = setInterval(() => {
+                        callSeconds++;
+                        const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+                        const s = String(callSeconds % 60).padStart(2, '0');
+                        timerEl.textContent = m + ':' + s;
+                    }, 1000);
+                }
+            }
+        }
+        function hideCallOverlay() {
+            isCallBusy = false;
+            updateInteractiveButtonsState();
+            if (callTimer) { clearInterval(callTimer); callTimer = null; }
+            document.getElementById('incallOverlay').classList.remove('active');
+            document.getElementById('dtmfDrawer').classList.remove('active');
+        }
+
+        // SMS Store, Two-Phase ACK, Unread Badge, and Retry Button
+        function extractOTPClientSide(text) {
+            if (!/(验证码|校验码|动态码|确认码|code|OTP|verification)/i.test(text)) return '';
+            const m = text.match(/(?<!\d)(\d{4,8})(?!\d)/);
+            return m ? m[1] : '';
+        }
+
+        function ensureThreadObject(peer) {
+            if (!smsThreads[peer] || Array.isArray(smsThreads[peer])) {
+                const oldList = Array.isArray(smsThreads[peer]) ? smsThreads[peer] : [];
+                smsThreads[peer] = { updatedAt: Date.now(), unread: 0, messages: oldList };
+            }
+            if (typeof smsThreads[peer].unread !== 'number') smsThreads[peer].unread = 0;
+            return smsThreads[peer];
+        }
+
+        function updateUnreadBadge() {
+            let total = 0;
+            Object.keys(smsThreads).forEach(peer => {
+                total += (ensureThreadObject(peer).unread || 0);
+            });
+            const badge = document.getElementById('smsUnreadBadge');
+            badge.textContent = total > 99 ? '99+' : String(total);
+            badge.classList.toggle('show', total > 0);
+        }
+
+        function markThreadRead(peer) {
+            const thread = ensureThreadObject(peer);
+            if (thread.unread > 0) {
+                thread.unread = 0;
+                saveState();
+                renderSmsThreads();
+            }
+        }
+
+        function addIncomingSms(peer, body, time, otpCode, dedupKey) {
+            if (dedupKey && seenDedupKeys.has(dedupKey)) {
+                // Still send ACK so native layer can delete duplicate from modem ME storage
+                postNative('ackSmsSaved', { dedupKey: dedupKey });
+                return;
+            }
+            if (dedupKey) seenDedupKeys.add(dedupKey);
+
+            const cleanPeer = peer || '未知号码';
+            const thread = ensureThreadObject(cleanPeer);
+            thread.updatedAt = Date.now();
+            if (currentTabId !== 'messages' || activeChatPeer !== cleanPeer) {
+                thread.unread = (thread.unread || 0) + 1;
+            }
+            const code = otpCode || extractOTPClientSide(body);
+            thread.messages.push({
+                id: 'in_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                dedupKey: dedupKey || '',
+                dir: 'in',
+                body: body,
+                time: time || '刚刚',
+                status: 'received',
+                otp: code
+            });
+            saveState();
+            renderSmsThreads();
+            if (activeChatPeer === cleanPeer) renderChatBubbles(cleanPeer);
+
+            // Bug 4 Fix: Send ACK back to native layer ONLY after message is safely saved in localStorage
+            if (dedupKey) {
+                postNative('ackSmsSaved', { dedupKey: dedupKey });
+            }
+        }
+
+        function syncNativeMessages(list) {
+            if (!Array.isArray(list)) return;
+            // Native store is authoritative: update existing messages' status/time or insert missing ones
+            const validIds = new Set(list.map(x => x.id));
+            list.forEach(item => {
+                if (item.dedupKey) seenDedupKeys.add(item.dedupKey);
+                const cleanPeer = item.peer || '未知号码';
+                const thread = ensureThreadObject(cleanPeer);
+                const existing = thread.messages.find(m => m.id === item.id || (item.dedupKey && m.dedupKey === item.dedupKey));
+                if (existing) {
+                    existing.status = item.status || existing.status;
+                    existing.time = item.time || existing.time;
+                } else {
+                    thread.messages.push({
+                        id: item.id,
+                        dedupKey: item.dedupKey || '',
+                        dir: item.dir || 'in',
+                        body: item.body || '',
+                        time: item.time || '刚刚',
+                        status: item.status || 'received',
+                        otp: item.otp || extractOTPClientSide(item.body || '')
+                    });
+                    thread.updatedAt = Math.max(thread.updatedAt || 0, (item.timestamp || 0) * 1000);
+                }
+            });
+            saveState();
+            renderSmsThreads();
+            if (activeChatPeer) renderChatBubbles(activeChatPeer);
+        }
+
+        function resolveUnknownSms(peer, msgId, newStatus) {
+            const thread = ensureThreadObject(peer);
+            const target = thread.messages.find(m => m.id === msgId);
+            if (target) {
+                target.status = newStatus;
+                target.time = '已确认送达';
+                saveState();
+                renderSmsThreads();
+                renderChatBubbles(peer);
+            }
+            postNative('resolveUnknownSms', { id: msgId, status: newStatus });
+        }
+
+        function deleteSmsItem(peer, msgId) {
+            const thread = ensureThreadObject(peer);
+            thread.messages = thread.messages.filter(m => m.id !== msgId);
+            if (thread.messages.length === 0) {
+                delete smsThreads[peer];
+                saveState();
+                closeChatThread();
+                renderSmsThreads();
+            } else {
+                saveState();
+                renderSmsThreads();
+                renderChatBubbles(peer);
+            }
+            postNative('deleteSms', { id: msgId });
+        }
+
+        function queueOutgoingSms(peer, body, existingMsgId) {
+            if (!isATBridgeOnline) { showToast('AT 通道未连接，无法发送短信'); return; }
+            const cleanPeer = (peer || '').replace(/[^0-9+*#]/g, '');
+            if (!cleanPeer) { showToast('收件人号码无效'); return; }
+            // JS string .length measures UTF-16 code units, matching UCS2 70-unit limit
+            if (!body || body.length > 70) { showToast('短信内容超出 70 个 UTF-16 单元限制'); return; }
+
+            const thread = ensureThreadObject(cleanPeer);
+            thread.updatedAt = Date.now();
+            let msgId = existingMsgId;
+
+            if (msgId) {
+                const target = thread.messages.find(m => m.id === msgId);
+                if (target) {
+                    target.status = 'pending';
+                    target.time = '重新发送中...';
+                }
+            } else {
+                msgId = 'out_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                thread.messages.push({
+                    id: msgId,
+                    dir: 'out',
+                    body: body,
+                    time: '发送中...',
+                    status: 'pending',
+                    otp: ''
+                });
+            }
+
+            saveState();
+            renderSmsThreads();
+            if (activeChatPeer === cleanPeer) renderChatBubbles(cleanPeer);
+
+            postNative('sendSMS', { id: msgId, to: cleanPeer, text: body });
+        }
+
+        let isSendingSMSBusy = false;
+        let keepAwakeState = true;
+        let notifPreviewState = false;
+
+        function toggleKeepAwake() {
+            postNative('setKeepAwake', { enabled: !keepAwakeState });
+        }
+        function toggleNotifPreview() {
+            postNative('setNotifPreview', { enabled: !notifPreviewState });
+        }
+        function confirmExportSms() {
+            postNative('exportSms', {});
+        }
+
+        function cancelQueuedSms(peer, msgId) {
+            postNative('cancelQueuedSms', { id: msgId });
+        }
+
+        function updateSmsDeliveryStatus(msgId, statusVal, errorMsg, timeLabel) {
+            const now = new Date();
+            const fallbackTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+            Object.keys(smsThreads).forEach(peer => {
+                const thread = ensureThreadObject(peer);
+                thread.messages.forEach(m => {
+                    if (m.id === msgId) {
+                        m.status = statusVal;
+                        if (statusVal === 'sent') {
+                            m.time = timeLabel || ('已发送 ' + fallbackTime);
+                        } else if (statusVal === 'queued_wait') {
+                            m.time = timeLabel || errorMsg || '⏳ 排队等待发送...';
+                        } else if (statusVal === 'unknown') {
+                            m.time = timeLabel || ('状态未知: ' + (errorMsg || '超时'));
+                        } else {
+                            m.time = '发送失败: ' + (errorMsg || '错误');
+                        }
+                    }
+                });
+            });
+            saveState();
+            renderSmsThreads();
+            if (activeChatPeer) renderChatBubbles(activeChatPeer);
+            if (statusVal === 'sent') showToast('短信发送成功');
+            else if (statusVal === 'queued_wait') showToast(timeLabel || '已加入发送队列，等待通道空闲自动发送');
+            else if (statusVal === 'unknown') showToast('短信状态未知 (请用气泡下方按钮确认或重试)');
+            else showToast('短信发送失败: ' + (errorMsg || ''));
+        }
+
+        function renderSmsThreads() {
+            const box = document.getElementById('threadsContainer');
+            box.textContent = '';
+            const peers = Object.keys(smsThreads).sort((a, b) => {
+                const ta = ensureThreadObject(a).updatedAt || 0;
+                const tb = ensureThreadObject(b).updatedAt || 0;
+                return tb - ta;
+            });
+
+            if (peers.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'text-align:center; color:var(--text-secondary); padding:40px 16px; font-size:14px;';
+                empty.textContent = '暂无短信会话，点击右上角同步或新建短信';
+                box.appendChild(empty);
+                return;
+            }
+            peers.forEach(peer => {
+                const thread = ensureThreadObject(peer);
+                const msgs = thread.messages;
+                if (!msgs || msgs.length === 0) return;
+                const last = msgs[msgs.length - 1];
+
+                const card = document.createElement('div');
+                card.className = 'thread-item';
+                card.onclick = () => openChatThread(peer);
+
+                const mainDiv = document.createElement('div');
+                mainDiv.className = 'thread-main';
+
+                const top = document.createElement('div');
+                top.className = 'thread-top';
+                const pSpan = document.createElement('span');
+                pSpan.className = 'thread-Peer';
+                pSpan.textContent = peer;
+                const tSpan = document.createElement('span');
+                tSpan.className = 'thread-time';
+                tSpan.textContent = last.time;
+                top.appendChild(pSpan);
+                top.appendChild(tSpan);
+
+                const prev = document.createElement('div');
+                prev.className = 'thread-preview';
+                prev.textContent = last.body;
+
+                mainDiv.appendChild(top);
+                mainDiv.appendChild(prev);
+                card.appendChild(mainDiv);
+
+                if (thread.unread > 0) {
+                    const dot = document.createElement('span');
+                    dot.className = 'unread-dot';
+                    card.appendChild(dot);
+                }
+
+                box.appendChild(card);
+            });
+        }
+
+        function openChatThread(peer) {
+            activeChatPeer = peer;
+            markThreadRead(peer);
+            document.getElementById('smsThreadsView').style.display = 'none';
+            document.getElementById('smsChatDetailView').classList.add('active');
+            document.getElementById('activeChatPeerTitle').textContent = peer;
+            renderChatBubbles(peer);
+        }
+        function closeChatThread() {
+            activeChatPeer = null;
+            document.getElementById('smsChatDetailView').classList.remove('active');
+            document.getElementById('smsThreadsView').style.display = 'flex';
+        }
+        function renderChatBubbles(peer) {
+            const box = document.getElementById('chatBubblesContainer');
+            box.textContent = '';
+            const thread = ensureThreadObject(peer);
+            thread.messages.forEach(m => {
+                const wrap = document.createElement('div');
+                wrap.className = 'bubble-wrapper ' + (m.dir === 'out' ? 'out' : 'in');
+
+                const b = document.createElement('div');
+                b.className = 'bubble selectable';
+                b.textContent = m.body;
+                wrap.appendChild(b);
+
+                if (m.otp) {
+                    const chip = document.createElement('div');
+                    chip.className = 'otp-chip';
+                    chip.textContent = '复制验证码: ' + m.otp;
+                    chip.onclick = () => copyTextSafe(m.otp);
+                    wrap.appendChild(chip);
+                }
+
+                const metaRow = document.createElement('div');
+                metaRow.className = 'bubble-meta-row';
+
+                const meta = document.createElement('span');
+                meta.className = 'bubble-meta' + (m.status === 'failed' ? ' err' : '');
+                meta.setAttribute('data-msg-id', m.id);
+                meta.textContent = m.time;
+                metaRow.appendChild(meta);
+
+                if (m.dir === 'out' && m.status === 'queued_wait') {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'retry-btn';
+                    cancelBtn.style.color = 'var(--warning)';
+                    cancelBtn.textContent = '✕ 取消排队';
+                    cancelBtn.onclick = () => cancelQueuedSms(peer, m.id);
+                    metaRow.appendChild(cancelBtn);
+                } else if (m.dir === 'out' && m.status === 'unknown') {
+                    const markBtn = document.createElement('button');
+                    markBtn.className = 'retry-btn';
+                    markBtn.style.color = 'var(--success)';
+                    markBtn.textContent = '✓ 已送达';
+                    markBtn.onclick = () => resolveUnknownSms(peer, m.id, 'sent');
+                    metaRow.appendChild(markBtn);
+
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'retry-btn';
+                    retryBtn.textContent = '↻ 重试';
+                    retryBtn.onclick = () => queueOutgoingSms(peer, m.body, m.id);
+                    metaRow.appendChild(retryBtn);
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'retry-btn';
+                    delBtn.style.color = 'var(--danger)';
+                    delBtn.textContent = '✕ 删除';
+                    delBtn.onclick = () => deleteSmsItem(peer, m.id);
+                    metaRow.appendChild(delBtn);
+                } else if (m.dir === 'out' && m.status === 'failed') {
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'retry-btn';
+                    retryBtn.textContent = '↻ 重试';
+                    retryBtn.onclick = () => queueOutgoingSms(peer, m.body, m.id);
+                    metaRow.appendChild(retryBtn);
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'retry-btn';
+                    delBtn.style.color = 'var(--danger)';
+                    delBtn.textContent = '✕ 删除';
+                    delBtn.onclick = () => deleteSmsItem(peer, m.id);
+                    metaRow.appendChild(delBtn);
+                }
+
+                wrap.appendChild(metaRow);
+                box.appendChild(wrap);
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+        function sendReplyInThread() {
+            if (!activeChatPeer) return;
+            const input = document.getElementById('chatReplyInput');
+            const text = input.value.trim();
+            if (!text) return;
+            if (text.length > 70) { showToast('超出 70 UTF-16 单元限制'); return; }
+            queueOutgoingSms(activeChatPeer, text, null);
+            input.value = '';
+        }
+        function dialFromChat() {
+            if (!activeChatPeer) return;
+            dialNumber = activeChatPeer;
+            startOutgoingCall();
+        }
+        function updateCharCounter() {
+            const val = document.getElementById('modalBody').value;
+            // JS .length is UTF-16 code units (emojis count as 2)
+            const len = val.length;
+            const counter = document.getElementById('modalCharCount');
+            counter.textContent = len + ' / 70 单元';
+            counter.style.color = len > 70 ? 'var(--danger)' : 'var(--text-secondary)';
+        }
+        function openNewSmsModal() {
+            updateCharCounter();
+            document.getElementById('newSmsModal').classList.add('active');
+        }
+        function closeNewSmsModal() {
+            document.getElementById('newSmsModal').classList.remove('active');
+        }
+        function confirmSendModalSms() {
+            const to = document.getElementById('modalRecipient').value.trim().replace(/[^0-9+*#]/g, '');
+            const body = document.getElementById('modalBody').value.trim();
+            if (!to || !body) { showToast('请填写有效号码和短信正文'); return; }
+            if (body.length > 70) { showToast('短信超出 70 个 UTF-16 单元限制'); return; }
+            queueOutgoingSms(to, body, null);
+            document.getElementById('modalRecipient').value = '';
+            document.getElementById('modalBody').value = '';
+            closeNewSmsModal();
+            openChatThread(to);
+        }
+
+        // Network & Advanced Settings
+        function toggleVoLTE() {
+            postNative('setVoLTE', { enabled: !volteState });
+            showToast('已入队 VoLTE 切换指令');
+        }
+        function saveEndpoint() {
+            const host = document.getElementById('endpointHostInput').value.trim();
+            const port = parseInt(document.getElementById('endpointPortInput').value.trim(), 10) || 5555;
+            postNative('updateEndpoint', { host: host, port: port });
+            showToast('正在重连 ' + host + ':' + port);
+        }
+        function applyAPNConfirm() {
+            const apn = document.getElementById('apnInput').value.trim();
+            if (!apn) { showToast('请输入 APN 名称'); return; }
+            postNative('setAPN', { apn: apn });
+            showToast('已入队 CGDCONT APN 配置: ' + apn);
+        }
+        function sendATCmd(cmd) {
+            cmdHistory.unshift(cmd);
+            cmdHistoryIdx = -1;
+            postNative('sendAT', { cmd: cmd });
+        }
+        function sendCustomAT() {
+            const input = document.getElementById('atInput');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            sendATCmd(cmd);
+            input.value = '';
+        }
+        function handleATKeydown(e) {
+            if (e.key === 'Enter') {
+                sendCustomAT();
+            } else if (e.key === 'ArrowUp') {
+                if (cmdHistoryIdx + 1 < cmdHistory.length) {
+                    cmdHistoryIdx++;
+                    document.getElementById('atInput').value = cmdHistory[cmdHistoryIdx];
+                }
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                if (cmdHistoryIdx > 0) {
+                    cmdHistoryIdx--;
+                    document.getElementById('atInput').value = cmdHistory[cmdHistoryIdx];
+                } else {
+                    cmdHistoryIdx = -1;
+                    document.getElementById('atInput').value = '';
+                }
+                e.preventDefault();
+            }
+        }
+        function appendATLog(text) {
+            const box = document.getElementById('termOutput');
+            box.textContent += text + '\n';
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Native Event Handler
+        window.onNativeEvent = function(evt) {
+            if (!evt || !evt.event) return;
+            const d = evt.data || {};
+            if (evt.event === 'modemStatus') {
+                const pill = document.getElementById('topStatusPill');
+                const pillTxt = document.getElementById('topStatusText');
+                const ecmBadge = document.getElementById('badgeECM');
+                const atBadge = document.getElementById('badgeATBridge');
+                const uacBadge = document.getElementById('badgeUAC');
+
+                isATBridgeOnline = !!d.atConnected;
+                isSendingSMSBusy = !!d.isSendingSMS;
+                keepAwakeState = (d.keepAwake !== undefined) ? !!d.keepAwake : true;
+                const awakeBtn = document.getElementById('btnKeepAwake');
+                if (awakeBtn) {
+                    awakeBtn.textContent = keepAwakeState ? '常亮已开启' : '常亮已关闭';
+                    awakeBtn.style.background = keepAwakeState ? 'var(--success)' : 'var(--bg-subtle)';
+                    awakeBtn.style.color = keepAwakeState ? '#fff' : 'var(--text-primary)';
+                }
+                notifPreviewState = !!d.notifPreview;
+                const notifBtn = document.getElementById('btnNotifPreview');
+                if (notifBtn) {
+                    notifBtn.textContent = notifPreviewState ? '显示正文已开启' : '默认隐藏防窥';
+                    notifBtn.style.background = notifPreviewState ? 'var(--warning)' : 'var(--bg-subtle)';
+                    notifBtn.style.color = notifPreviewState ? '#fff' : 'var(--text-primary)';
+                }
+                updateInteractiveButtonsState();
+
+                if (d.connected && d.atConnected) {
+                    pill.classList.add('ok');
+                    pillTxt.textContent = (d.operator || '已就绪') + ' · ' + d.ip;
+                } else if (d.connected) {
+                    pill.classList.remove('ok');
+                    pillTxt.textContent = '网卡在线 · AT未连';
+                } else {
+                    pill.classList.remove('ok');
+                    pillTxt.textContent = '模块未连接';
+                }
+
+                if (d.connected) {
+                    ecmBadge.className = 'badge-tag badge-green';
+                    ecmBadge.textContent = d.ip;
+                } else {
+                    ecmBadge.className = 'badge-tag badge-red';
+                    ecmBadge.textContent = '未检测到 192.168.225.x';
+                }
+
+                if (d.atConnected) {
+                    atBadge.className = 'badge-tag badge-green';
+                    atBadge.textContent = d.atStatus || '已连接';
+                } else {
+                    atBadge.className = 'badge-tag badge-red';
+                    atBadge.textContent = d.atStatus || '未连接';
+                    document.getElementById('offlineBannerText').textContent = '⚠️ AT 通道未连接 (' + (d.atStatus || '断开') + ')，拨号与发短信已禁用';
+                }
+
+                if (d.uac) {
+                    uacBadge.className = 'badge-tag badge-green';
+                    uacBadge.textContent = '硬件已挂载 (.usbAudio)';
+                } else {
+                    uacBadge.className = 'badge-tag badge-red';
+                    uacBadge.textContent = '未挂载';
+                }
+
+                document.getElementById('cardOperatorName').textContent = isATBridgeOnline ? (d.operator || '未检测') : '— (AT 未连接)';
+                document.getElementById('cardRegText').textContent = isATBridgeOnline ? ('网络注册: ' + (d.reg || '未知')) : '网络注册: —';
+                document.getElementById('cardCSQText').textContent = isATBridgeOnline ? ('CSQ ' + (d.csq ?? '--')) : 'CSQ —';
+                document.getElementById('cardSimPin').textContent = isATBridgeOnline ? (d.sim || '未知') : '—';
+                if (d.smsc) document.getElementById('cardSMSC').textContent = d.smsc;
+
+                const bars = document.querySelectorAll('#signalBarsBox .s-bar');
+                const count = d.bars || 0;
+                bars.forEach((b, i) => b.classList.toggle('on', i < count));
+
+                volteState = !!d.volte;
+                const vBtn = document.getElementById('btnVolteToggle');
+                vBtn.textContent = volteState ? 'VoLTE 已开启 (点击关闭)' : 'VoLTE 已关闭 (点击开启)';
+                vBtn.style.background = volteState ? 'var(--success)' : 'var(--primary)';
+                document.getElementById('imsRegSubText').textContent = 'IMS 注册状态: ' + (d.imsReg ? '已注册 VoLTE' : '未就绪');
+            } else if (evt.event === 'smsSyncAll') {
+                syncNativeMessages(d.messages);
+            } else if (evt.event === 'smsReceived') {
+                addIncomingSms(d.sender, d.body, d.time, d.otp, d.dedupKey);
+                showToast('收到来自 ' + d.sender + ' 的新短信');
+            } else if (evt.event === 'smsSendResult') {
+                const st = d.status || (d.success ? 'sent' : 'failed');
+                updateSmsDeliveryStatus(d.id, st, d.error, d.time);
+            } else if (evt.event === 'smsQueueCountdown') {
+                const rem = d.remaining || 0;
+                const ids = d.ids || [];
+                const label = '⏳ 排队等待中 (' + rem + 's 后自动发送)';
+                ids.forEach(id => {
+                    Object.keys(smsThreads).forEach(peer => {
+                        const thread = ensureThreadObject(peer);
+                        thread.messages.forEach(m => {
+                            if (m.id === id && m.status === 'queued_wait') {
+                                m.time = label;
+                            }
+                        });
+                    });
+                    const domSpan = document.querySelector('span.bubble-meta[data-msg-id="' + id + '"]');
+                    if (domSpan) domSpan.textContent = label;
+                });
+            } else if (evt.event === 'callEndEvent') {
+                if (d.logType && d.number) recordRecentCall(d.number, d.logType);
+                if (d.toast) showToast(d.toast);
+            } else if (evt.event === 'callState') {
+                if (d.state === 'ended' || d.state === 'idle' || d.state === 'hangingUp' || d.state === 'cooldown') {
+                    hideCallOverlay();
+                } else {
+                    if (d.state === 'incoming' && !isCallBusy) recordRecentCall(d.number, '呼入');
+                    showCallOverlay(d.number, d.state, !!d.uac, !!d.audioActive, !!d.qpcmv);
+                }
+            } else if (evt.event === 'audioState') {
+                isMuted = !!d.muted;
+                isSpeaker = !!d.speaker;
+                document.getElementById('btnMute').classList.toggle('active', isMuted);
+                document.getElementById('btnSpeaker').classList.toggle('active', isSpeaker);
+            } else if (evt.event === 'toast') {
+                if (d.msg) showToast(d.msg);
+            } else if (evt.event === 'atLog') {
+                if (d.text) appendATLog(d.text);
+            } else if (evt.event === 'usbProbe') {
+                (d.lines || []).forEach(function(l) { appendATLog('[USB探测] ' + l); });
+                showToast('USB 探测完成，见终端');
+            } else if (evt.event === 'portProbe') {
+                if (d.phase === 'start') {
+                    appendATLog('[端口探测] 开始探测 ' + d.host + ' 共 ' + d.total + ' 个常见端口…');
+                } else if (d.phase === 'done') {
+                    const open = (d.open || []);
+                    appendATLog('[端口探测] ' + d.host + ' 开放端口: ' + (open.length ? open.join(', ') : '无') +
+                        ' | 被拒绝: ' + d.refused + ' | 无响应/其他: ' + d.other);
+                    appendATLog(open.length
+                        ? '[端口探测] 有开放端口：可用 Safari 打开 http://' + d.host + ':端口 查看是否有管理页面。'
+                        : '[端口探测] 没有发现任何开放端口：模块未对网络提供 AT 或管理服务，iPhone 无法通过网络控制它。');
+                    showToast(open.length ? ('开放端口: ' + open.join(', ')) : '未发现开放端口');
+                }
+            }
+        };
+
+        renderRecents();
+        renderSmsThreads();
+        updateUnreadBadge();
+        updateInteractiveButtonsState();
+    </script>
+</body>
+</html>
